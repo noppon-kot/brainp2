@@ -12,9 +12,23 @@
         #answer { font-size: 20px; width: 80px; padding: 10px; text-align: center; }
         button { padding: 10px 20px; font-size: 16px; margin-top: 20px; }
         .button-group { display: flex; justify-content: center; gap: 10px; }
-        table { margin-top: 20px; width: 100%; border-collapse: collapse; }
-        th, td { padding: 10px; text-align: center; border: 1px solid #ddd; }
-        th { background-color: #cccccc; }
+        table {
+            margin-top: 20px;
+            width: auto; /* ขนาดตารางจะพอดีกับเนื้อหา */
+            border-collapse: collapse; /* รวมขอบของตารางให้เป็นเส้นเดียว */
+            margin-left: auto; /* จัดให้ตารางอยู่กลาง */
+            margin-right: auto; /* จัดให้ตารางอยู่กลาง */
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid black; /* เปลี่ยนสีขอบเป็นสีดำ */
+        }
+
+        th {
+            background-color: #cccccc;
+        }
         .correct { background-color: #c8e6c9; } /* สีเขียว */
         .incorrect { background-color: #f8d7da; } /* สีแดงอ่อน */
     </style>
@@ -153,6 +167,11 @@
             const correctAnswer = generatedNumbers.reduce((a, b) => a + b, 0);
             const isCorrect = userAnswer === correctAnswer;
 
+            // เพิ่มคะแนนเมื่อคำตอบถูกต้อง
+            if (isCorrect) {
+                correctAnswers++;
+            }
+
             // เก็บข้อมูลการตอบของผู้ใช้
             answers.push({
                 question: currentQuestion,
@@ -181,9 +200,12 @@
             row.appendChild(tdUserAnswer);
             answersBody.appendChild(row);
 
+            // อัปเดตคะแนนทันที
             scoreLabel.textContent = `Score: ${correctAnswers}/${totalQuestions}`;
+
             showNextQuestion();
         }
+
 
         function updateTime() {
             if (timerRunning) {
