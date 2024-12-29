@@ -232,6 +232,19 @@
                 timeSeconds++;
                 timeLabel.textContent = `Time: ${formatTime(timeSeconds)}`;
             }
+
+             if (timeSeconds >= 420){
+                numbersLabel.textContent = "Game End!";
+                scoreLabel.textContent = `Your Score: ${correctAnswers}/${totalQuestions}`;
+                timeLabel.textContent = `Time: ${formatTime(timeSeconds)}`;
+                answerInput.classList.add("hidden");
+                enterButton.classList.add("hidden");
+                startButton.classList.remove("hidden");
+                answersTable.classList.remove("hidden"); // Show table only after game ends
+                clearInterval(timer);
+                return;
+            }
+
         }
 
         function formatTime(seconds) {
