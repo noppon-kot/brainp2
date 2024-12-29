@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Training Game</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        .hidden { display: none; }
+        .numbers { font-size: 30px; font-weight: bold; color: blue; margin: 20px 0; white-space: pre-line; }
+        .score, .time { font-size: 18px; margin: 10px 0; }
+        #answer { font-size: 20px; width: 80px; padding: 10px; text-align: center; }
+        button { padding: 10px 20px; font-size: 16px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>BrainTraining P2</h1>
+    <div id="questionNumber" class="score">Question: 1</div>
+    <div id="score" class="score">Score: 0/0</div>
+    <div id="time" class="time">Time: 00:00</div>
+    <div id="numbers" class="numbers"></div>
+    <input id="answer" type="text" placeholder="Enter answer" />
+    <button id="startButton">Start</button>
+    <button id="stopButton" class="hidden">Stop</button>
+    <script>
+        let currentQuestion = 0;
+        let correctAnswers = 0;
+        let totalQuestions = 20;
+        let timeSeconds = 0;
+        let timerRunning = false;
+        let generatedNumbers = [];
+        let timer;
+    
+        const startButton = document.getElementById("startButton");
+        const stopButton = document.getElementById("stopButton");
+        const answerInput = document.getElementById("answer");
+        const scoreLabel = document.getElementById("score");
+        const timeLabel = document.getElementById("time");
+        const numbersLabel = document.getElementById("numbers");
+        const questionNumberLabel = document.getElementById("questionNumber");
+    
+        startButton.addEventListener("click", startGame);
+        stopButton.addEventListener("click", stopGame);
+        answerInput.addEventListener("keydown", checkAnswer);
+    
+        function startGame() {
+            currentQuestion = 0;
+            correctAnswers = 0;
+            timeSeconds = 0;
+            timerRunning = true;
+            scoreLabel.textContent = `Score: ${correctAnswers}/${totalQuestions}`;
+            timeLabel.textContent = "Time: 00:00";
+            questionNumberLabel.textContent = `Question: ${currentQuestion + 1}`;
+    
+            startButton.classList.add("hidden");
+            stopButton.classList.remove("hidden");
+            answerInput.classList.remove("hidden");
+            answerInput.value = "";
+            answerInput.focus();
+    
+            timer = setInterval(updateTime, 1000);
+    
+            showNextQuestion();
+        }
+    
+        function showNextQuestion() {
+            if (currentQuestion >= totalQuestions) {
+                numbersLabel.textContent = "Game End!";
+                scoreLabel.textContent = `Your Score: ${correctAnswers}/${totalQuestions}`;
+                timeLabel.textContent = `Time: ${formatTime(timeSeconds)}`;
+                answerInput.classList.add("hidden");
+                startButton.classList.remove("hidden");
+                clearInterval(timer);
+                return;
+            }
+    
+            generatedNumbers = [];
+            let totalSum = 0;
+    
+            // ก่อนครึ่งหนึ่งของคำถาม (ผลรวมไม่เกิน 9)
+            if (currentQuestion < totalQuestions / 2) {
+                for (let i = 0; i < 8; i++) {
+                    let num = randomInt(1, 9);
+
+                    // ถ้าผลรวม = 9 จะส่งตัวเลขลบแทน
+                    if (totalSum === 9) {
+                        num = randomInt(-8, -1);  // สุ่มเลขลบจาก -1 ถึง -8
+                    } else if (totalSum + num > 9) {  // ถ้าผลรวมเกิน 9 ให้สุ่มใหม่
+                        while (totalSum + num > 9) {
+                            num = randomInt(1, 9);
+                        }
+                    }
+
+                    generatedNumbers.push(num);
+                    totalSum += num;
+                }
+            } else {
+                // หลังครึ่งหนึ่งของคำถาม (สามารถสุ่มเลขลบและผลรวมเกิน 9)
+                for (let i = 0; i < 8; i++) {
+                    let num;
+                    if (i == 0) {
+                        num = randomInt(1, 9);
+                    } else if (i == 4) {
+                        num = randomInt(-8, -1);  // สุ่มเลขลบ
+                    } else {
+                        num = randomInt(1, 9);
+                    }
+    
+                    generatedNumbers.push(num);
+                    totalSum += num;
+                }
+            }
+    
+            const formattedNumbers = generatedNumbers.map(num => num.toString().padStart(3, ' '));
+            numbersLabel.textContent = formattedNumbers.join("\n");
+    
+            answerInput.value = "";
+            answerInput.focus();
+            questionNumberLabel.textContent = `Question: ${currentQuestion + 1}`;
+            currentQuestion++;
+        }
+    
+        function checkAnswer(event) {
+            if (event.key === "Enter") {
+                const userAnswer = parseInt(answerInput.value);
+    
+                if (isNaN(userAnswer)) {
+                    return;
+                }
+    
+                const correctAnswer = generatedNumbers.reduce((a, b) => a + b, 0);
+                if (userAnswer === correctAnswer) {
+                    correctAnswers++;
+                }
+    
+                scoreLabel.textContent = `Score: ${correctAnswers}/${totalQuestions}`;
+                showNextQuestion();
+            }
+        }
+    
+        function updateTime() {
+            if (timerRunning) {
+                timeSeconds++;
+                timeLabel.textContent = `Time: ${formatTime(timeSeconds)}`;
+            }
+        }
+    
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secondsLeft = seconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${secondsLeft.toString().padStart(2, '0')}`;
+        }
+    
+        function stopGame() {
+            currentQuestion = 0;
+            correctAnswers = 0;
+            timeSeconds = 0;
+            timerRunning = false;
+            numbersLabel.textContent = "";
+            scoreLabel.textContent = "Score: 0/0";
+            timeLabel.textContent = "Time: 00:00";
+            questionNumberLabel.textContent = "Question: 1";
+            startButton.classList.remove("hidden");
+            stopButton.classList.add("hidden");
+            answerInput.classList.add("hidden");
+            clearInterval(timer);
+        }
+    
+        function randomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+    </script>
+    
+</body>
+</html>
