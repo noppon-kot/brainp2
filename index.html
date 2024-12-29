@@ -12,6 +12,11 @@
         #answer { font-size: 20px; width: 80px; padding: 10px; text-align: center; }
         button { padding: 10px 20px; font-size: 16px; margin-top: 20px; }
         .button-group { display: flex; justify-content: center; gap: 10px; }
+        table { margin-top: 20px; width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; text-align: center; border: 1px solid #ddd; }
+        th { background-color: #cccccc; }
+        .correct { background-color: #c8e6c9; } /* สีเขียว */
+        .incorrect { background-color: #f8d7da; } /* สีแดงอ่อน */
     </style>
 </head>
 <body>
@@ -26,6 +31,20 @@
         <button id="stopButton" class="hidden">Stop</button>
         <button id="enterButton" class="hidden">Enter</button>
     </div>
+
+    <table id="answersTable" class="hidden">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Numbers</th>
+                <th>Correct Answer</th>
+                <th>Your Answer</th>
+            </tr>
+        </thead>
+        <tbody id="answersBody">
+        </tbody>
+    </table>
+
     <script>
         let currentQuestion = 0;
         let correctAnswers = 0;
@@ -34,7 +53,8 @@
         let timerRunning = false;
         let generatedNumbers = [];
         let timer;
-    
+        const answers = [];
+
         const startButton = document.getElementById("startButton");
         const stopButton = document.getElementById("stopButton");
         const enterButton = document.getElementById("enterButton");
@@ -43,12 +63,14 @@
         const timeLabel = document.getElementById("time");
         const numbersLabel = document.getElementById("numbers");
         const questionNumberLabel = document.getElementById("questionNumber");
-    
+        const answersTable = document.getElementById("answersTable");
+        const answersBody = document.getElementById("answersBody");
+
         startButton.addEventListener("click", startGame);
         stopButton.addEventListener("click", stopGame);
         enterButton.addEventListener("click", checkAnswerClick);
         answerInput.addEventListener("keydown", checkAnswerKey);
-    
+
         function startGame() {
             currentQuestion = 0;
             correctAnswers = 0;
@@ -57,7 +79,7 @@
             scoreLabel.textContent = `Score: ${correctAnswers}/${totalQuestions}`;
             timeLabel.textContent = "Time: 00:00";
             questionNumberLabel.textContent = `Question: ${currentQuestion + 1}`;
-    
+
             startButton.classList.add("hidden");
             stopButton.classList.remove("hidden");
             enterButton.classList.remove("hidden");
@@ -66,14 +88,15 @@
             timeLabel.classList.remove("hidden");
             questionNumberLabel.classList.remove("hidden");
             numbersLabel.classList.remove("hidden");
+            answersTable.classList.add("hidden"); // ซ่อนตารางเมื่อเริ่มเกม
             answerInput.value = "";
             answerInput.focus();
-    
+
             timer = setInterval(updateTime, 1000);
-    
+
             showNextQuestion();
         }
-    
+
         function showNextQuestion() {
             if (currentQuestion >= totalQuestions) {
                 numbersLabel.textContent = "Game End!";
@@ -82,86 +105,99 @@
                 answerInput.classList.add("hidden");
                 enterButton.classList.add("hidden");
                 startButton.classList.remove("hidden");
+                answersTable.classList.remove("hidden"); // แสดงตารางเมื่อเกมจบ
                 clearInterval(timer);
                 return;
             }
-    
+
             generatedNumbers = [];
             let totalSum = 0;
-    
-            if (currentQuestion < totalQuestions / 2) {
-                for (let i = 0; i < 8; i++) {
-                    let num = randomInt(1, 9);
-                    if (totalSum === 9) {
-                        num = randomInt(-8, -1);
-                    } else if (totalSum + num > 9) {
-                        while (totalSum + num > 9) {
-                            num = randomInt(1, 9);
-                        }
-                    }
-                    generatedNumbers.push(num);
-                    totalSum += num;
-                }
-            } else {
-                for (let i = 0; i < 8; i++) {
-                    let num;
-                    if (i == 0) {
-                        num = randomInt(1, 9);
-                    } else if (i == 4) {
-                        num = randomInt(-8, -1);
-                    } else {
+
+            for (let i = 0; i < 8; i++) {
+                let num = randomInt(1, 9);
+                if (totalSum === 9) {
+                    num = randomInt(-8, -1);
+                } else if (totalSum + num > 9) {
+                    while (totalSum + num > 9) {
                         num = randomInt(1, 9);
                     }
-                    generatedNumbers.push(num);
-                    totalSum += num;
                 }
+                generatedNumbers.push(num);
+                totalSum += num;
             }
-    
+
             const formattedNumbers = generatedNumbers.map(num => num.toString().padStart(3, ' '));
             numbersLabel.textContent = formattedNumbers.join("\n");
-    
+
             answerInput.value = "";
             answerInput.focus();
             questionNumberLabel.textContent = `Question: ${currentQuestion + 1}`;
             currentQuestion++;
         }
-    
+
         function checkAnswerKey(event) {
             if (event.key === "Enter") {
                 processAnswer();
             }
         }
-    
+
         function checkAnswerClick() {
             processAnswer();
         }
-    
+
         function processAnswer() {
             const userAnswer = parseInt(answerInput.value);
             if (isNaN(userAnswer)) {
                 return;
             }
             const correctAnswer = generatedNumbers.reduce((a, b) => a + b, 0);
-            if (userAnswer === correctAnswer) {
-                correctAnswers++;
-            }
+            const isCorrect = userAnswer === correctAnswer;
+
+            // เก็บข้อมูลการตอบของผู้ใช้
+            answers.push({
+                question: currentQuestion,
+                numbers: generatedNumbers.join(", "),
+                correctAnswer: correctAnswer,
+                userAnswer: userAnswer,
+                isCorrect: isCorrect
+            });
+
+            // แสดงข้อมูลในตาราง
+            const row = document.createElement("tr");
+            row.classList.add(isCorrect ? "correct" : "incorrect");
+
+            const tdQuestion = document.createElement("td");
+            tdQuestion.textContent = currentQuestion;
+            const tdNumbers = document.createElement("td");
+            tdNumbers.textContent = generatedNumbers.join(", ");
+            const tdCorrectAnswer = document.createElement("td");
+            tdCorrectAnswer.textContent = correctAnswer;
+            const tdUserAnswer = document.createElement("td");
+            tdUserAnswer.textContent = userAnswer;
+
+            row.appendChild(tdQuestion);
+            row.appendChild(tdNumbers);
+            row.appendChild(tdCorrectAnswer);
+            row.appendChild(tdUserAnswer);
+            answersBody.appendChild(row);
+
             scoreLabel.textContent = `Score: ${correctAnswers}/${totalQuestions}`;
             showNextQuestion();
         }
-    
+
         function updateTime() {
             if (timerRunning) {
                 timeSeconds++;
                 timeLabel.textContent = `Time: ${formatTime(timeSeconds)}`;
             }
         }
-    
+
         function formatTime(seconds) {
             const minutes = Math.floor(seconds / 60);
             const secondsLeft = seconds % 60;
             return `${minutes.toString().padStart(2, '0')}:${secondsLeft.toString().padStart(2, '0')}`;
         }
-    
+
         function stopGame() {
             currentQuestion = 0;
             correctAnswers = 0;
@@ -171,6 +207,7 @@
             scoreLabel.textContent = "Score: 0/0";
             timeLabel.textContent = "Time: 00:00";
             questionNumberLabel.textContent = "Question: 1";
+
             startButton.classList.remove("hidden");
             stopButton.classList.add("hidden");
             enterButton.classList.add("hidden");
@@ -178,9 +215,10 @@
             scoreLabel.classList.add("hidden");
             timeLabel.classList.add("hidden");
             questionNumberLabel.classList.add("hidden");
+            answersTable.classList.add("hidden"); // ซ่อนตารางเมื่อหยุดเกม
             clearInterval(timer);
         }
-    
+
         function randomInt(min, max) {
             return Math.floor(Math.random() * (max - min + 1)) + min;
         }
