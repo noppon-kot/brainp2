@@ -5,9 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brain Training Game</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+         body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            padding: 20px; 
+            transition: background-color 0.5s ease-in-out; 
+        }
+        .correct { 
+            background-color: green !important; 
+        }
+        .incorrect { 
+            background-color: red !important; 
+        }
         .hidden { display: none; }
-        .numbers { font-size: 18px; font-weight: bold; color: blue; margin: 20px 0; white-space: pre-line; }
+        .numbers { font-size: 20px; font-weight: bold; color: blue; margin: 20px 0; white-space: pre-line; }
         .score, .time { font-size: 18px; margin: 10px 0; }
         #answer { font-size: 20px; width: 80px; padding: 10px; text-align: center; }
         button { padding: 10px 20px; font-size: 16px; margin-top: 20px; }
@@ -84,6 +95,13 @@
         stopButton.addEventListener("click", stopGame);
         enterButton.addEventListener("click", checkAnswerClick);
         answerInput.addEventListener("keydown", checkAnswerKey);
+
+        function flashBackground(className) {
+            document.body.classList.add(className);
+            setTimeout(() => {
+                document.body.classList.remove(className);
+            }, 500);
+        }
 
         function startGame() {
             currentQuestion = 0;
@@ -190,6 +208,9 @@
             // เพิ่มคะแนนเมื่อคำตอบถูกต้อง
             if (isCorrect) {
                 correctAnswers++;
+                flashBackground("correct");
+            }else {
+                flashBackground("incorrect");
             }
 
             // เก็บข้อมูลการตอบของผู้ใช้
@@ -233,7 +254,7 @@
                 timeLabel.textContent = `Time: ${formatTime(timeSeconds)}`;
             }
 
-             if (timeSeconds >= 420){
+            if (timeSeconds >= 420){
                 numbersLabel.textContent = "Game End!";
                 scoreLabel.textContent = `Your Score: ${correctAnswers}/${totalQuestions}`;
                 timeLabel.textContent = `Time: ${formatTime(timeSeconds)}`;
@@ -244,7 +265,6 @@
                 clearInterval(timer);
                 return;
             }
-
         }
 
         function formatTime(seconds) {
