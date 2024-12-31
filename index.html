@@ -249,7 +249,7 @@
         function processAnswer() {
             const userAnswer = parseInt(answerInput.value);
             if (isNaN(userAnswer)) {
-                return;
+                //return;
             }
             const correctAnswer = generatedNumbers.reduce((a, b) => a + b, 0);
             const isCorrect = userAnswer === correctAnswer;
