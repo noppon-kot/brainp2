@@ -101,7 +101,7 @@
     <script>
         let currentQuestion = 0;
         let correctAnswers = 0;
-        let totalQuestions = 20;
+        let totalQuestions = 50;
         let timeSeconds = 0;
         let timerRunning = false;
         let generatedNumbers = [];
@@ -188,6 +188,7 @@
                 numbersLabel.classList.add("hidden");
                 startButton.classList.remove("hidden");
                 stopButton.classList.add("hidden");
+                questionNumberLabel.classList.add("hidden");
                 answersTable.classList.remove("hidden"); // Show table only after game ends
                 clearInterval(timer);
             }
