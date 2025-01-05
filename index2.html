@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Drawing and Line Deletion</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Canvas Drawing and Line Deletion</h1>
+    <canvas id="exampleCanvas" width="400" height="400"></canvas>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+    <script>
+        const gridSize = 5; // 5x5 grid
+        const points = [];
+        const exampleLines = [];
+        const userLines = [];
+
+        // วาดจุดบน Canvas
+        function drawPoints(ctx) {
+            const gap = ctx.canvas.width / (gridSize + 1);
+            points.length = 0;
+
+            for (let row = 1; row <= gridSize; row++) {
+                for (let col = 1; col <= gridSize; col++) {
+                    const x = col * gap;
+                    const y = row * gap;
+                    points.push({ x, y });
+                    ctx.beginPath();
+                    ctx.arc(x, y, 5, 0, Math.PI * 2);
+                    ctx.fillStyle = "black";
+                    ctx.fill();
+                }
+            }
+        }
+
+        // ฟังก์ชันวาดเส้น
+        function drawLines(ctx, lines) {
+            lines.forEach(([start, end]) => {
+                ctx.beginPath();
+                ctx.moveTo(start.x, start.y);
+                ctx.lineTo(end.x, end.y);
+                ctx.strokeStyle = "black";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+        }
+
+        // ฟังก์ชันจัดการการวาดเส้นจากการลาก
+        function handleUserDrawing(canvas, ctx, linesArray) {
+            let isDrawing = false;
+            let startPoint = null;
+            let currentLine = null;
+
+            canvas.addEventListener("mousedown", (e) => {
+                const { offsetX, offsetY } = e;
+                startPoint = points.find(p => 
+                    Math.hypot(p.x - offsetX, p.y - offsetY) < 10
+                );
+                if (startPoint) isDrawing = true;
+            });
+
+            canvas.addEventListener("mousemove", (e) => {
+                if (!isDrawing || !startPoint) return;
+
+                const { offsetX, offsetY } = e;
+                currentLine = [startPoint, { x: offsetX, y: offsetY }];
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawPoints(ctx);
+                drawLines(ctx, linesArray);
+                drawLines(ctx, [currentLine]);
+            });
+
+            canvas.addEventListener("mouseup", (e) => {
+                if (!isDrawing || !startPoint) return;
+                const { offsetX, offsetY } = e;
+                const endPoint = points.find(p => 
+                    Math.hypot(p.x - offsetX, p.y - offsetY) < 10
+                );
+
+                if (endPoint && startPoint !== endPoint) {
+                    linesArray.push([startPoint, endPoint]);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    drawPoints(ctx);
+                    drawLines(ctx, linesArray);
+                }
+                isDrawing = false;
+                startPoint = null;
+            });
+
+            // รองรับการแตะและลากบนมือถือ
+            canvas.addEventListener("touchstart", (e) => {
+                const { offsetX, offsetY } = e.changedTouches[0];
+                startPoint = points.find(p => 
+                    Math.hypot(p.x - offsetX, p.y - offsetY) < 10
+                );
+                if (startPoint) isDrawing = true;
+            });
+
+            canvas.addEventListener("touchmove", (e) => {
+                if (!isDrawing || !startPoint) return;
+
+                const { offsetX, offsetY } = e.changedTouches[0];
+                currentLine = [startPoint, { x: offsetX, y: offsetY }];
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawPoints(ctx);
+                drawLines(ctx, linesArray);
+                drawLines(ctx, [currentLine]);
+            });
+
+            canvas.addEventListener("touchend", (e) => {
+                if (!isDrawing || !startPoint) return;
+                const { offsetX, offsetY } = e.changedTouches[0];
+                const endPoint = points.find(p => 
+                    Math.hypot(p.x - offsetX, p.y - offsetY) < 10
+                );
+
+                if (endPoint && startPoint !== endPoint) {
+                    linesArray.push([startPoint, endPoint]);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    drawPoints(ctx);
+                    drawLines(ctx, linesArray);
+                }
+                isDrawing = false;
+                startPoint = null;
+            });
+        }
+
+        // ฟังก์ชันตรวจสอบว่าเส้นใดใกล้กับจุดที่คลิกหรือไม่
+        function isPointNearLine(x, y, line) {
+            const [start, end] = line;
+            const lineLength = Math.hypot(end.x - start.x, end.y - start.y);
+            const distance = Math.abs((end.y - start.y) * x - (end.x - start.x) * y + end.x * start.y - end.y * start.x) / lineLength;
+            return distance < 10; // ความห่างจากเส้นที่ยอมรับได้
+        }
+
+        // ฟังก์ชันลบเส้นที่ผู้เล่นวาด
+        function handleLineDelete(canvas, ctx, linesArray) {
+            canvas.addEventListener("dblclick", (e) => {
+                const { offsetX, offsetY } = e;
+
+                // ตรวจสอบว่าเราคลิกที่เส้นใดหรือไม่
+                for (let i = 0; i < linesArray.length; i++) {
+                    if (isPointNearLine(offsetX, offsetY, linesArray[i])) {
+                        // ลบเส้นนั้น
+                        linesArray.splice(i, 1);
+
+                        // เคลียร์ Canvas
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                        // วาดจุดและเส้นที่เหลือ
+                        drawPoints(ctx);
+                        drawLines(ctx, linesArray);
+
+                        break; // ออกจากลูปหลังจากลบเส้นแล้ว
+                    }
+                }
+            });
+
+            // รองรับการแตะสองครั้ง (double-tap) ในมือถือ
+            canvas.addEventListener("touchend", (e) => {
+                const { offsetX, offsetY } = e.changedTouches[0];
+
+                for (let i = 0; i < linesArray.length; i++) {
+                    if (isPointNearLine(offsetX, offsetY, linesArray[i])) {
+                        linesArray.splice(i, 1);
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        drawPoints(ctx);
+                        drawLines(ctx, linesArray);
+                        break;
+                    }
+                }
+            });
+        }
+
+        function init() {
+            const exampleCanvas = document.getElementById("exampleCanvas");
+            const gameCanvas = document.getElementById("gameCanvas");
+            const exampleCtx = exampleCanvas.getContext("2d");
+            const gameCtx = gameCanvas.getContext("2d");
+
+            // วาดจุดบน gameCanvas
+            drawPoints(gameCtx);
+
+            // วาดจุดบน exampleCanvas
+            drawPoints(exampleCtx);
+
+            // วาดเส้นตัวอย่างบน Example Canvas
+            drawLines(exampleCtx, exampleLines);
+
+            // จับการลากเส้นในเกม
+            handleUserDrawing(gameCanvas, gameCtx, userLines);
+
+            // จับการลากเส้นในตัวอย่าง
+            handleUserDrawing(exampleCanvas, exampleCtx, exampleLines);
+
+            // เรียกใช้งาน handleLineDelete เพื่อให้สามารถลบเส้นได้
+            handleLineDelete(gameCanvas, gameCtx, userLines);  // ลบเส้นจาก gameCanvas
+            handleLineDelete(exampleCanvas, exampleCtx, exampleLines);  // ลบเส้นจาก exampleCanvas
+        }
+
+        // เรียกใช้เมื่อหน้าเว็บโหลด
+        window.onload = init;
+    </script>
+</body>
+</html>
