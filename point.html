@@ -76,27 +76,13 @@
                 drawLines(ctx, [currentLine]);
             });
 
-            canvas.addEventListener("mouseup", (e) => {
-                if (!isDrawing || !startPoint) return;
-                const { offsetX, offsetY } = e;
-                const endPoint = points.find(p => 
-                    Math.hypot(p.x - offsetX, p.y - offsetY) < 10
-                );
-
-                if (endPoint && startPoint !== endPoint) {
-                    linesArray.push([startPoint, endPoint]);
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    drawPoints(ctx);
-                    drawLines(ctx, linesArray);
-                }
-                isDrawing = false;
-                startPoint = null;
-            });
-
-            // รองรับการแตะและลากบนมือถือ
+              // รองรับการแตะและลากบนมือถือ
             canvas.addEventListener("touchstart", (e) => {
                 e.preventDefault();  // ป้องกันการเลื่อนหน้าจอ
-                const { offsetX, offsetY } = e.changedTouches[0];
+                const touch = e.touches[0];
+                const offsetX = touch.pageX - canvas.offsetLeft;
+                const offsetY = touch.pageY - canvas.offsetTop;
+                
                 startPoint = points.find(p => 
                     Math.hypot(p.x - offsetX, p.y - offsetY) < 10
                 );
@@ -107,7 +93,10 @@
                 e.preventDefault();  // ป้องกันการเลื่อนหน้าจอ
                 if (!isDrawing || !startPoint) return;
 
-                const { offsetX, offsetY } = e.changedTouches[0];
+                const touch = e.touches[0];
+                const offsetX = touch.pageX - canvas.offsetLeft;
+                const offsetY = touch.pageY - canvas.offsetTop;
+
                 currentLine = [startPoint, { x: offsetX, y: offsetY }];
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 drawPoints(ctx);
@@ -118,7 +107,11 @@
             canvas.addEventListener("touchend", (e) => {
                 e.preventDefault();  // ป้องกันการเลื่อนหน้าจอ
                 if (!isDrawing || !startPoint) return;
-                const { offsetX, offsetY } = e.changedTouches[0];
+
+                const touch = e.changedTouches[0];
+                const offsetX = touch.pageX - canvas.offsetLeft;
+                const offsetY = touch.pageY - canvas.offsetTop;
+
                 const endPoint = points.find(p => 
                     Math.hypot(p.x - offsetX, p.y - offsetY) < 10
                 );
@@ -132,6 +125,63 @@
                 isDrawing = false;
                 startPoint = null;
             });
+
+            // canvas.addEventListener("mouseup", (e) => {
+            //     if (!isDrawing || !startPoint) return;
+            //     const { offsetX, offsetY } = e;
+            //     const endPoint = points.find(p => 
+            //         Math.hypot(p.x - offsetX, p.y - offsetY) < 10
+            //     );
+
+            //     if (endPoint && startPoint !== endPoint) {
+            //         linesArray.push([startPoint, endPoint]);
+            //         ctx.clearRect(0, 0, canvas.width, canvas.height);
+            //         drawPoints(ctx);
+            //         drawLines(ctx, linesArray);
+            //     }
+            //     isDrawing = false;
+            //     startPoint = null;
+            // });
+
+            // // รองรับการแตะและลากบนมือถือ
+            // canvas.addEventListener("touchstart", (e) => {
+            //     e.preventDefault();  // ป้องกันการเลื่อนหน้าจอ
+            //     const { offsetX, offsetY } = e.changedTouches[0];
+            //     startPoint = points.find(p => 
+            //         Math.hypot(p.x - offsetX, p.y - offsetY) < 10
+            //     );
+            //     if (startPoint) isDrawing = true;
+            // });
+
+            // canvas.addEventListener("touchmove", (e) => {
+            //     e.preventDefault();  // ป้องกันการเลื่อนหน้าจอ
+            //     if (!isDrawing || !startPoint) return;
+
+            //     const { offsetX, offsetY } = e.changedTouches[0];
+            //     currentLine = [startPoint, { x: offsetX, y: offsetY }];
+            //     ctx.clearRect(0, 0, canvas.width, canvas.height);
+            //     drawPoints(ctx);
+            //     drawLines(ctx, linesArray);
+            //     drawLines(ctx, [currentLine]);
+            // });
+
+            // canvas.addEventListener("touchend", (e) => {
+            //     e.preventDefault();  // ป้องกันการเลื่อนหน้าจอ
+            //     if (!isDrawing || !startPoint) return;
+            //     const { offsetX, offsetY } = e.changedTouches[0];
+            //     const endPoint = points.find(p => 
+            //         Math.hypot(p.x - offsetX, p.y - offsetY) < 10
+            //     );
+
+            //     if (endPoint && startPoint !== endPoint) {
+            //         linesArray.push([startPoint, endPoint]);
+            //         ctx.clearRect(0, 0, canvas.width, canvas.height);
+            //         drawPoints(ctx);
+            //         drawLines(ctx, linesArray);
+            //     }
+            //     isDrawing = false;
+            //     startPoint = null;
+            // });
         }
 
         // ฟังก์ชันตรวจสอบว่าเส้นใดใกล้กับจุดที่คลิกหรือไม่
