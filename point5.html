@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Line Connection Checker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    canvas {
+      border: 1px solid black;
+      margin: 20px;
+    }
+    .container {
+      display: flex;
+      justify-content: space-around;
+      width: 100%;
+    }
+    .box {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="box">
+      <h2>กล่องซ้าย</h2>
+      <canvas id="drawingCanvas1" width="400" height="400"></canvas>
+    </div>
+    <div class="box">
+      <h2>กล่องขวา</h2>
+      <canvas id="drawingCanvas2" width="400" height="400"></canvas>
+    </div>
+  </div>
+
+  <script>
+    const setupCanvas = (canvasId, connections) => {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+
+      // กำหนดจุด 16 จุด (4x4)
+      const points = [];
+      const rows = 4, cols = 4;
+      const spacing = canvas.width / cols;
+
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          points.push({
+            x: col * spacing + spacing / 2,
+            y: row * spacing + spacing / 2,
+          });
+        }
+      }
+
+      // ฟังก์ชันวาดเส้น
+      const drawLine = (startPoint, endPoint, color = "blue") => {
+        ctx.beginPath();
+        ctx.moveTo(startPoint.x, startPoint.y);
+        ctx.lineTo(endPoint.x, endPoint.y);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.closePath();
+      };
+
+      // วาดจุด
+      const drawPoints = () => {
+        points.forEach(point => {
+          ctx.beginPath();
+          ctx.arc(point.x, point.y, 6, 0, Math.PI * 2);
+          ctx.fillStyle = "black";
+          ctx.fill();
+          ctx.closePath();
+        });
+      };
+
+      let isDrawing = false;
+      let lastPoint = null;
+
+      const startDrawing = (e) => {
+        const [x, y] = getPosition(e);
+        const point = findClosestPoint(x, y);
+        if (point) {
+          isDrawing = true;
+          lastPoint = point;
+        }
+      };
+
+      const draw = (e) => {
+        if (!isDrawing || !lastPoint) return;
+
+        const [x, y] = getPosition(e);
+        const currentPoint = findClosestPoint(x, y);
+
+        if (currentPoint && currentPoint !== lastPoint) {
+          drawLine(lastPoint, currentPoint, "blue");
+          connections.push([points.indexOf(lastPoint), points.indexOf(currentPoint)]);
+          lastPoint = currentPoint;
+        }
+      };
+
+      const stopDrawing = () => {
+        isDrawing = false;
+        lastPoint = null;
+      };
+
+      const getPosition = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.touches ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+        const y = e.touches ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+        return [x, y];
+      };
+
+      const findClosestPoint = (x, y) => {
+        let closestPoint = null;
+        let minDistance = 15;
+
+        points.forEach(point => {
+          const distance = Math.sqrt(
+            Math.pow(point.x - x, 2) + Math.pow(point.y - y, 2)
+          );
+          if (distance < minDistance) {
+            closestPoint = point;
+          }
+        });
+
+        return closestPoint;
+      };
+
+      // Event Listeners
+      canvas.addEventListener('mousedown', startDrawing);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', stopDrawing);
+
+      canvas.addEventListener('touchstart', startDrawing);
+      canvas.addEventListener('touchmove', draw);
+      canvas.addEventListener('touchend', stopDrawing);
+
+      drawPoints();
+    };
+
+    const compareConnections = () => {
+        const leftConnections = JSON.stringify(connections.left);
+        const rightConnections = connections.right;
+
+        const canvasRight = document.getElementById('drawingCanvas2');
+        const ctxRight = canvasRight.getContext('2d');
+
+        rightConnections.forEach(connection => {
+            const connectionString = JSON.stringify(connection);
+            const isMatching = leftConnections.includes(connectionString);
+
+            // เปลี่ยนสีเป็นเขียวหากตรงกัน
+            ctxRight.beginPath();
+            ctxRight.moveTo(connection[0].x, connection[0].y);
+            ctxRight.lineTo(connection[1].x, connection[1].y);
+            ctxRight.strokeStyle = isMatching ? "green" : "blue"; // เขียวถ้าตรงกัน
+            ctxRight.lineWidth = 2;
+            ctxRight.stroke();
+            ctxRight.closePath();
+        });
+    };
+
+
+    const leftConnections = [];
+    const rightConnections = [];
+
+    setupCanvas('drawingCanvas1', leftConnections);
+    setupCanvas('drawingCanvas2', rightConnections);
+
+    document.addEventListener('mouseup', () => {
+      console.log("mouseup");
+      const rightCanvas = document.getElementById('drawingCanvas2');
+      compareConnections(leftConnections, rightConnections, rightCanvas);
+    });
+
+    document.addEventListener('touchend', () => {
+      console.log("touchend");
+      const rightCanvas = document.getElementById('drawingCanvas2');
+      compareConnections(leftConnections, rightConnections, rightCanvas);
+    });
+
+  </script>
+</body>
+</html>
