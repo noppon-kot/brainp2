@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connect the Dots (Multiple Lines)</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+    }
+    .canvas-container {
+      display: flex;
+      justify-content: space-around;
+      width: 100%;
+    }
+    canvas {
+      border: 1px solid #000;
+      touch-action: none; /* สำหรับมือถือ */
+      margin: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="canvas-container">
+    <canvas id="drawingCanvas1" width="300" height="300"></canvas>
+    <canvas id="drawingCanvas2" width="300" height="300"></canvas>
+  </div>
+
+  <script>
+    const setupCanvas = (canvasId) => {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+
+      // กำหนดจุด 16 จุด (4x4)
+      const points = [];
+      const rows = 4, cols = 4;
+      const spacing = canvas.width / cols;
+
+      // สร้างจุด
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          points.push({
+            x: col * spacing + spacing / 2,
+            y: row * spacing + spacing / 2,
+            connections: [] // เก็บข้อมูลการเชื่อมต่อไปยังจุดอื่น
+          });
+        }
+      }
+
+      // วาดจุดทั้งหมด
+      const drawPoints = () => {
+        points.forEach(point => {
+          ctx.beginPath();
+          ctx.arc(point.x, point.y, 6, 0, Math.PI * 2); // ขนาดของจุด
+          ctx.fillStyle = "black";
+          ctx.fill();
+          ctx.closePath();
+        });
+      };
+
+      // วาดเส้นที่เชื่อมต่อ
+      const drawConnections = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // ล้าง canvas
+        points.forEach(point => {
+          point.connections.forEach(connection => {
+            ctx.beginPath();
+            ctx.moveTo(point.x, point.y);
+            ctx.lineTo(connection.x, connection.y);
+            ctx.strokeStyle = "blue";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.closePath();
+          });
+        });
+        drawPoints();
+      };
+
+      // ตรวจสอบจุดที่ใกล้ที่สุด
+      const findClosestPoint = (x, y) => {
+        let closestPoint = null;
+        let minDistance = 15; // ระยะใกล้สุดที่ยอมรับได้
+
+        points.forEach(point => {
+          const distance = Math.sqrt(
+            Math.pow(point.x - x, 2) + Math.pow(point.y - y, 2)
+          );
+          if (distance < minDistance) {
+            closestPoint = point;
+          }
+        });
+
+        return closestPoint;
+      };
+
+      let isDrawing = false;
+      let lastPoint = null;
+
+      const startDrawing = (e) => {
+        const [x, y] = getPosition(e);
+        const point = findClosestPoint(x, y);
+        if (point) {
+          isDrawing = true;
+          lastPoint = point;
+        }
+      };
+
+      const draw = (e) => {
+        if (!isDrawing || !lastPoint) return;
+
+        const [x, y] = getPosition(e);
+        const currentPoint = findClosestPoint(x, y);
+
+        if (currentPoint && currentPoint !== lastPoint) {
+          // ตรวจสอบว่ามีการเชื่อมต่ออยู่แล้วหรือไม่
+          const alreadyConnected = lastPoint.connections.some(
+            connection => connection === currentPoint
+          );
+
+          if (!alreadyConnected) {
+            lastPoint.connections.push(currentPoint);
+            currentPoint.connections.push(lastPoint); // เชื่อมแบบสองทิศทาง
+            drawConnections();
+          }
+        }
+      };
+
+      const stopDrawing = () => {
+        isDrawing = false;
+        lastPoint = null;
+      };
+
+      const getPosition = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.touches ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+        const y = e.touches ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+        return [x, y];
+      };
+
+      // Event Listeners
+      canvas.addEventListener('mousedown', startDrawing);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', stopDrawing);
+
+      // รองรับมือถือ
+      canvas.addEventListener('touchstart', startDrawing);
+      canvas.addEventListener('touchmove', draw);
+      canvas.addEventListener('touchend', stopDrawing);
+
+      // วาดจุดเริ่มต้น
+      drawPoints();
+    };
+
+    // Setup canvas ทั้งสองอัน
+    setupCanvas('drawingCanvas1');
+    setupCanvas('drawingCanvas2');
+  </script>
+</body>
+</html>
