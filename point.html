@@ -95,6 +95,7 @@
 
             // รองรับการแตะและลากบนมือถือ
             canvas.addEventListener("touchstart", (e) => {
+                e.preventDefault();  // ป้องกันการเลื่อนหน้าจอ
                 const { offsetX, offsetY } = e.changedTouches[0];
                 startPoint = points.find(p => 
                     Math.hypot(p.x - offsetX, p.y - offsetY) < 10
@@ -103,6 +104,8 @@
             });
 
             canvas.addEventListener("touchmove", (e) => {
+                e.preventDefault();  // ป้องกันการเลื่อนหน้าจอ
+                e.preventDefault();  // ป้องกันการเลื่อนหน้าจอ
                 if (!isDrawing || !startPoint) return;
 
                 const { offsetX, offsetY } = e.changedTouches[0];
@@ -114,6 +117,7 @@
             });
 
             canvas.addEventListener("touchend", (e) => {
+                e.preventDefault();  // ป้องกันการเลื่อนหน้าจอ
                 if (!isDrawing || !startPoint) return;
                 const { offsetX, offsetY } = e.changedTouches[0];
                 const endPoint = points.find(p => 
