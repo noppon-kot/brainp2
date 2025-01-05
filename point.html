@@ -105,7 +105,6 @@
 
             canvas.addEventListener("touchmove", (e) => {
                 e.preventDefault();  // ป้องกันการเลื่อนหน้าจอ
-                e.preventDefault();  // ป้องกันการเลื่อนหน้าจอ
                 if (!isDrawing || !startPoint) return;
 
                 const { offsetX, offsetY } = e.changedTouches[0];
