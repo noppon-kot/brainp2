@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>เส้นลากและลบ</title>
+  <style>
+    canvas {
+      border: 1px solid black;
+    }
+    #container {
+      display: flex;
+    }
+    canvas {
+      margin-right: 20px;
+    }
+    div {text-align: center;}
+  </style>
+</head>
+<body>
+  <h2>เกมลากเส้นตามจุด</h2>
+
+  <button id="refreshButton">Refresh</button>
+
+<script>
+  document.getElementById('refreshButton').addEventListener('click', function() {
+    window.location.reload(); // ทำการรีโหลดหน้าเว็บ
+  });
+</script>
+  
+  <!-- Container สำหรับแบ่ง canvas ซ้ายขวา -->
+  <div id="container" >
+    <!-- Canvas สำหรับเส้นตัวอย่าง -->
+    <canvas id="exampleCanvas" width="400" height="400"></canvas>
+    <!-- Canvas สำหรับเกม -->
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+    
+  </div>
+
+  <script src="game2.js"></script>
+</body>
+</html>
