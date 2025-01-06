@@ -127,6 +127,14 @@
         enterButton.addEventListener("click", checkAnswerClick);
         answerInput.addEventListener("keydown", checkAnswerKey);
 
+
+        document.addEventListener("keydown", function(event) {
+                    if (event.key === "Backspace" && startButton.classList.contains("hidden") === false) {
+                        startGame();
+                    }
+                });
+        
+
         function updateProgress() {
             progress += 1;
             const percentage = (progress / totalQuestions) * 100;
