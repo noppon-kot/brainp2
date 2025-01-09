@@ -230,7 +230,7 @@
         const resultMessage = selectedAnswer === totalSum ? "Correct!" : "Wrong!";
         const resultClass = selectedAnswer === totalSum ? "correct" : "wrong";
 
-        score = selectedAnswer === totalSum ? score +1 : score;
+        score = selectedAnswer === totalSum ? score +1 : 0;
 
         summaryDiv.innerHTML = `
             <table>
