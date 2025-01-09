@@ -9,6 +9,8 @@
       font-family: Arial, sans-serif;
       text-align: center;
       margin: 20px;
+      font-size: 24px;
+      color: blue;
     }
     .hidden {
       display: none;
@@ -32,7 +34,7 @@
 </head>
 <body>
   <div id="screen1">
-    <h1>Press Enter to Start</h1>
+    <button onclick="play()">Play</button>
   </div>
 
   <div id="screen2" class="hidden">
@@ -47,7 +49,7 @@
   <div id="screen4" class="hidden">
     <h1>Result</h1>
     <div id="summary"></div>
-    <button onclick="restartGame()">Play Again</button>
+    <button onclick="play()">Play Again</button>
   </div>
 
   <script>
@@ -89,15 +91,15 @@
 
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
-        if (!document.getElementById('screen1').classList.contains('hidden')) {
-            document.getElementById('screen1').classList.add('hidden');
-            document.getElementById('screen2').classList.remove('hidden');
-            generateNumbers();
-            showNumbers();
-        } else if (!document.getElementById('screen3').classList.contains('hidden')) {
-            event.preventDefault(); // หยุดการทำงานเริ่มต้น
-            submitAnswer();
-        }
+            if (!document.getElementById('screen1').classList.contains('hidden')) {
+                document.getElementById('screen1').classList.add('hidden');
+                document.getElementById('screen2').classList.remove('hidden');
+                generateNumbers();
+                showNumbers();
+            } else if (!document.getElementById('screen3').classList.contains('hidden')) {
+                event.preventDefault(); // หยุดการทำงานเริ่มต้น
+                submitAnswer();
+            }
         }
     });
 
@@ -122,10 +124,22 @@
         document.getElementById('screen4').classList.remove('hidden');
         }
 
+    function play(){
+        document.getElementById('screen1').classList.add('hidden');
+        document.getElementById('screen2').classList.remove('hidden');
+        document.getElementById('screen3').classList.add('hidden');
+        document.getElementById('screen4').classList.add('hidden');
+        generateNumbers();
+        showNumbers();
+    }
 
     function restartGame() {
       document.getElementById('screen4').classList.add('hidden');
       document.getElementById('screen1').classList.remove('hidden');
+        // document.getElementById('screen1').classList.add('hidden');
+        // document.getElementById('screen2').classList.remove('hidden');
+        // generateNumbers();
+        // showNumbers();
     }
 
     document.addEventListener('keydown', (event) => {
