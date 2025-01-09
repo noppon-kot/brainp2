@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เกมคิดเลขเร็ว</title>
+    <style>
+         body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            padding: 20px; 
+            transition: background-color 0.5s ease-in-out; 
+        }
+        .correct { 
+            background-color: green !important; 
+        }
+        .incorrect { 
+            background-color: red !important; 
+        }
+        .hidden { display: none; }
+        .numbers { font-size: 20px; font-weight: bold; color: blue; margin: 20px 0; white-space: pre-line; }
+        .score, .time { font-size: 18px; margin: 10px 0; }
+        #answer { font-size: 20px; width: 80px; padding: 10px; text-align: center; }
+        button { padding: 10px 20px; font-size: 16px; margin-top: 20px; }
+        .button-group { display: flex; justify-content: center; gap: 10px; }
+        table {
+            margin-top: 20px;
+            width: auto; /* ขนาดตารางจะพอดีกับเนื้อหา */
+            border-collapse: collapse; /* รวมขอบของตารางให้เป็นเส้นเดียว */
+            margin-left: auto; /* จัดให้ตารางอยู่กลาง */
+            margin-right: auto; /* จัดให้ตารางอยู่กลาง */
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid black; /* เปลี่ยนสีขอบเป็นสีดำ */
+        }
+
+        th {
+            background-color: #cccccc;
+        }
+        .correct { background-color: #c8e6c9; } /* สีเขียว */
+        .incorrect { background-color: #f8d7da; } /* สีแดงอ่อน */
+        #progress-bar-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #aaaaaa;
+        }
+
+        #progress-bar {
+            width: 0;
+            height: 100%;
+            background-color: #4caf50; /* สีเขียวสำหรับความสำเร็จ */
+            border-radius: 10px;
+        }
+
+        #enterButton {
+            background-color: green;
+            color: white;
+        }
+       
+        
+    </style>
+</head>
+<body>
+    <div id="progress-bar-container">
+        <div id="progress-bar"></div>
+    </div>
+    <h1>เกมคิดเลขเร็ว</h1>
+    <div id="questionNumber" class="score hidden">คำถาม: 1</div>
+    <div id="score" class="score hidden">คะแนน: 0/0</div>
+    <div id="time" class="time hidden">เวลา: 00:00</div>
+    <div id="numbers" class="numbers hidden"></div>
+    <input id="answer" class="hidden" type="text" placeholder="Enter answer" />
+    <div class="button-group">
+        <button id="startButton">เริ่มเล่น</button>
+        <button id="stopButton" class="hidden">หยุดเกมส์</button>
+        <button id="enterButton" class="hidden" >ส่งคำตอบ</button>
+    </div>
+
+    <table id="answersTable" class="hidden">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Numbers</th>
+                <th>Correct Answer</th>
+                <th>Your Answer</th>
+            </tr>
+        </thead>
+        <tbody id="answersBody">
+        </tbody>
+    </table>
+
+    <script>
+        let currentQuestion = 0;
+        let correctAnswers = 0;
+        let totalQuestions = 1;
+        let timeSeconds = 0;
+        let timerRunning = false;
+        let generatedNumbers = [];
+        let timer;
+        let answers = [];
+        let progress = 0;
+
+
+        const startButton = document.getElementById("startButton");
+        const stopButton = document.getElementById("stopButton");
+        const enterButton = document.getElementById("enterButton");
+        const answerInput = document.getElementById("answer");
+        const scoreLabel = document.getElementById("score");
+        const timeLabel = document.getElementById("time");
+        const numbersLabel = document.getElementById("numbers");
+        const questionNumberLabel = document.getElementById("questionNumber");
+        const answersTable = document.getElementById("answersTable");
+        const answersBody = document.getElementById("answersBody");
+        const progressBar = document.getElementById("progress-bar");
+
+        startButton.addEventListener("click", startGame);
+        stopButton.addEventListener("click", stopGame);
+        enterButton.addEventListener("click", checkAnswerClick);
+        answerInput.addEventListener("keydown", checkAnswerKey);
+
+
+        document.addEventListener("keydown", function(event) {
+                    if (event.key === "Backspace" && startButton.classList.contains("hidden") === false) {
+                        startGame();
+                    }
+                });
+        
+
+        function updateProgress() {
+            progress += 1;
+            const percentage = (progress / totalQuestions) * 100;
+            progressBar.style.width = `${percentage}%`;
+            if (progress >= totalQuestions) {
+               // resetBar();
+                celebrate();
+            }
+        }
+
+        function resetBar() {
+            progress = 0;
+            progressBar.style.width = "0%";
+        }
+
+        function flashBackground(className) {
+            document.body.classList.add(className);
+            setTimeout(() => {
+                document.body.classList.remove(className);
+            }, 200);
+        }
+
+        function stopAfterTimeout() {
+            setTimeout(() => {
+                // stopGame();
+                showNextQuestion();
+            }, 3000); // 3 วินาที
+        }
+
+
+        function startGame() {
+            currentQuestion = 0;
+            correctAnswers = 0;
+            timeSeconds = 0;
+            timerRunning = true;
+            answers = [];
+            scoreLabel.textContent = `คะแนน: ${correctAnswers}/${totalQuestions}`;
+            timeLabel.textContent = "เวลา: 00:00";
+            questionNumberLabel.textContent = `คำถาม: ${currentQuestion + 1}`;
+
+            startButton.classList.add("hidden");
+            stopButton.classList.add("hidden");
+            enterButton.classList.add("hidden");
+           // answerInput.classList.remove("hidden");
+            scoreLabel.classList.remove("hidden");
+            timeLabel.classList.remove("hidden");
+            questionNumberLabel.classList.remove("hidden");
+            numbersLabel.classList.remove("hidden");
+            answersTable.classList.add("hidden"); // ซ่อนตารางเมื่อเริ่มเกม
+            answersBody.innerHTML = '';
+            answerInput.value = "";
+            answerInput.focus();
+            resetBar();
+
+            timer = setInterval(updateTime, 1000);
+
+            stopAfterTimeout();
+
+            showNextQuestion();
+        }
+
+        
+
+        function showNextQuestion() {
+            if (currentQuestion >= totalQuestions) {
+                numbersLabel.textContent = "จบเกมส์!";
+                scoreLabel.textContent = `คะแนน: ${correctAnswers}/${totalQuestions}`;
+                timeLabel.textContent = `เวลา: ${formatTime(timeSeconds)}`;
+               // answerInput.classList.add("hidden");
+                enterButton.classList.add("hidden");
+                numbersLabel.classList.add("hidden");
+                startButton.classList.remove("hidden");
+                stopButton.classList.add("hidden");
+                questionNumberLabel.classList.add("hidden");
+                answersTable.classList.remove("hidden"); // Show table only after game ends
+
+                answerInput.classList.remove("hidden");
+                clearInterval(timer);
+            }
+            generatedNumbers = [];
+            let totalSum = 0;
+
+            for (let i = 0; i < 8; i++) {
+                let num = randomInt(1, 9);
+                    if (i === 4 || i === 7 || totalSum > 30 ) {
+                        num = randomInt(-9, -1);
+                    } else if (totalSum + num < 0) {
+                        while (totalSum + num < 0) {
+                            num = randomInt(1, 9);
+                        }
+
+                        while (totalSum > 30 ) {
+                            randomInt(-9, -1);
+                        }
+                    }
+                    generatedNumbers.push(num);
+                    totalSum += num;
+            }
+
+            // if (currentQuestion < totalQuestions / 2) {
+            //     for (let i = 0; i < 8; i++) {
+            //         let num = randomInt(1, 9);
+            //         if (totalSum === 9) {
+            //             num = randomInt(-8, -1);
+            //         } else if (totalSum + num > 9) {
+            //             while (totalSum + num > 9) {
+            //                 num = randomInt(1, 9);
+            //             }
+            //         }
+            //         generatedNumbers.push(num);
+            //         totalSum += num;
+            //     }
+            // } else {
+            //     for (let i = 0; i < 8; i++) {
+            //         let num = randomInt(1, 9);
+            //         if (i === 4 || i === 7 || totalSum > 30 ) {
+            //             num = randomInt(-9, -1);
+            //         } else if (totalSum + num < 0) {
+            //             while (totalSum + num < 0) {
+            //                 num = randomInt(1, 9);
+            //             }
+
+            //             while (totalSum > 30 ) {
+            //                 randomInt(-9, -1);
+            //             }
+            //         }
+            //         generatedNumbers.push(num);
+            //         totalSum += num;
+            //     }
+            // }
+
+            const formattedNumbers = generatedNumbers.map(num => num.toString().padStart(3, ' '));
+            numbersLabel.textContent = formattedNumbers.join("\n");
+
+            answerInput.value = "";
+            answerInput.focus();
+            questionNumberLabel.textContent = `คำถาม: ${currentQuestion + 1}`;
+            currentQuestion++;
+        }
+
+
+        function checkAnswerKey(event) {
+            if (event.key === "Enter") {
+                processAnswer();
+            }
+        }
+
+        function checkAnswerClick() {
+            processAnswer();
+        }
+
+        function processAnswer() {
+            const userAnswer = parseInt(answerInput.value);
+            if (isNaN(userAnswer)) {
+                //return;
+            }
+            const correctAnswer = generatedNumbers.reduce((a, b) => a + b, 0);
+            const isCorrect = userAnswer === correctAnswer;
+
+            // เพิ่มคะแนนเมื่อคำตอบถูกต้อง
+            if (isCorrect) {
+                correctAnswers++;
+                flashBackground("correct");
+                updateProgress();
+            }else {
+                flashBackground("incorrect");
+            }
+
+            // เก็บข้อมูลการตอบของผู้ใช้
+            answers.push({
+                question: currentQuestion,
+                numbers: generatedNumbers.join(", "),
+                correctAnswer: correctAnswer,
+                userAnswer: userAnswer,
+                isCorrect: isCorrect
+            });
+
+            // แสดงข้อมูลในตาราง
+            const row = document.createElement("tr");
+            row.classList.add(isCorrect ? "correct" : "incorrect");
+
+            const tdQuestion = document.createElement("td");
+            tdQuestion.textContent = currentQuestion;
+            const tdNumbers = document.createElement("td");
+            tdNumbers.textContent = generatedNumbers.join(", ");
+            const tdCorrectAnswer = document.createElement("td");
+            tdCorrectAnswer.textContent = correctAnswer;
+            const tdUserAnswer = document.createElement("td");
+            tdUserAnswer.textContent = userAnswer;
+
+            row.appendChild(tdQuestion);
+            row.appendChild(tdNumbers);
+            row.appendChild(tdCorrectAnswer);
+            row.appendChild(tdUserAnswer);
+            answersBody.appendChild(row);
+
+            // อัปเดตคะแนนทันที
+            scoreLabel.textContent = `คะแนน: ${correctAnswers}/${totalQuestions}`;
+
+            showNextQuestion();
+        }
+
+
+        function updateTime() {
+            if (timerRunning) {
+                timeSeconds++;
+                timeLabel.textContent = `เวลา: ${formatTime(timeSeconds)}`;
+            }
+
+            if (timeSeconds >= 420){
+                numbersLabel.textContent = "จบเกมส์!";
+                scoreLabel.textContent = `คะแนนของคุณ: ${correctAnswers}/${totalQuestions}`;
+                timeLabel.textContent = `เวลา: ${formatTime(timeSeconds)}`;
+                answerInput.classList.add("hidden");
+                enterButton.classList.add("hidden");
+                startButton.classList.remove("hidden");
+                answersTable.classList.remove("hidden"); // Show table only after game ends
+                clearInterval(timer);
+                return;
+            }
+        }
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secondsLeft = seconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${secondsLeft.toString().padStart(2, '0')}`;
+        }
+
+        function celebrate() {
+            // แสดงข้อความ "Congratulations"
+            const message = document.createElement('div');
+            message.textContent = "Congratulations!";
+            message.style.position = "absolute";
+            message.style.top = "50%";
+            message.style.left = "50%";
+            message.style.transform = "translate(-50%, -50%)";
+            message.style.fontSize = "3rem";
+            message.style.color = "gold";
+            message.style.fontWeight = "bold";
+            document.body.appendChild(message);
+
+            // ทำให้ข้อความเคลื่อนไหว (animation effect)
+            message.animate(
+                [
+                    { transform: 'scale(1)', opacity: 1 },
+                    { transform: 'scale(1.5)', opacity: 0 },
+                ], 
+                {
+                    duration: 2000,
+                    easing: 'ease-in-out',
+                    fill: 'forwards',
+                }
+            );
+
+        // สร้างแอนิเมชั่นลูกโป่งระเบิด
+        for (let i = 0; i < 10; i++) {
+            const balloon = document.createElement('div');
+            balloon.style.position = "absolute";
+            balloon.style.top = `${Math.random() * 100}%`;
+            balloon.style.left = `${Math.random() * 100}%`;
+            balloon.style.width = "50px";
+            balloon.style.height = "50px";
+            balloon.style.borderRadius = "50%";
+            balloon.style.backgroundColor = "pink";
+            balloon.style.opacity = "0.8";
+            document.body.appendChild(balloon);
+
+            // ทำให้ลูกโป่งเคลื่อนไหว (balloon animation)
+            balloon.animate(
+                [
+                    { transform: 'translateY(0)', opacity: 1 },
+                    { transform: 'translateY(-500px)', opacity: 0 },
+                ], 
+                {
+                    duration: 1500 + Math.random() * 1000, // ทำให้แต่ละลูกเคลื่อนไหวไม่เท่ากัน
+                    easing: 'ease-in-out',
+                    fill: 'forwards',
+                }
+            );
+        }
+    }
+
+        function stopGame() {
+            currentQuestion = 0;
+            correctAnswers = 0;
+            timeSeconds = 0;
+            timerRunning = false;
+            numbersLabel.textContent = "";
+            scoreLabel.textContent = "คะแนน: 0/0";
+            timeLabel.textContent = "เวลา: 00:00";
+            questionNumberLabel.textContent = "คำถาม: 1";
+
+            startButton.classList.remove("hidden");
+            stopButton.classList.add("hidden");
+            enterButton.classList.add("hidden");
+            answerInput.classList.add("hidden");
+            scoreLabel.classList.add("hidden");
+            timeLabel.classList.add("hidden");
+            questionNumberLabel.classList.add("hidden");
+            answersTable.classList.add("hidden"); // ซ่อนตารางเมื่อหยุดเกม
+            clearInterval(timer);
+            resetBar();
+        }
+
+        function randomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+    </script>
+</body>
+</html>
