@@ -3,14 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Number Game</title>
+  <title>Mental Arithmetic</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       text-align: center;
       margin: 20px;
-      font-size: 24px;
+      font-size: 16px;
       color: blue;
+    }
+    #numbers {
+        color: #0000ff;
+        font-size: 22px;
+        font-weight: bold;
     }
     .hidden {
       display: none;
@@ -30,11 +35,124 @@
     #summary p {
       font-size: 20px; /* ขยายขนาดฟอนต์สำหรับข้อความใน summary */
     }
+
+    #answerButtons button {
+        font-size: 18px; /* ขนาดปุ่มคำตอบเล็กลง */
+        margin: 5px;
+        padding: 10px 20px;
+    }
+    .result, #summary p {
+        font-size: 16px; /* ลดขนาดฟอนต์ของข้อความในผลลัพธ์ */
+    }
+    button {
+        font-size: 16px; /* ขนาดฟอนต์เริ่มต้นสำหรับปุ่มทั่วไป */
+        padding: 10px 20px;
+        margin: 10px;
+    }
+    button[onclick="play()"],
+    button[onclick="play()"]:focus,
+    button[onclick="play()"]:hover {
+        font-size: 24px; /* ขนาดฟอนต์ใหญ่ขึ้นสำหรับปุ่ม Play */
+        padding: 15px 30px; /* เพิ่ม padding ให้ใหญ่ขึ้น */
+        background-color: #007bff; /* สีพื้นหลัง */
+        color: white; /* สีตัวอักษร */
+        border: none;
+        border-radius: 8px; /* มุมโค้ง */
+        cursor: pointer;
+    }
+    button[onclick="play()"]:hover {
+        background-color: #0056b3; /* สีที่เปลี่ยนเมื่อ hover */
+    }
+
+    button[onclick="play()"]:active {
+        background-color: #003f7f; /* สีที่เปลี่ยนเมื่อกด */
+    }
+
+    button[onclick="playAgain()"] {
+        font-size: 24px; /* ขนาดฟอนต์ใหญ่ขึ้นสำหรับปุ่ม Play Again */
+        padding: 15px 30px;
+        background-color: #28a745; /* สีพื้นหลัง */
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    button[onclick="playAgain()"]:hover {
+        background-color: #218838;
+    }
+
+    button[onclick="playAgain()"]:active {
+        background-color: #1e7e34;
+    }
+
+    .answer-button {
+        font-size: 20px;
+        padding: 15px 30px;
+        margin: 10px;
+        border: none;
+        border-radius: 8px;
+        background-color: #f0f0f0;
+        color: #000;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .answer-button:hover {
+     background-color: #328e17;
+    }
+
+    .answer-button.correct {
+     background-color: #4caf50; /* สีเขียว */
+     color: white;
+    }
+
+    .answer-button.wrong {
+     background-color: #f44336; /* สีแดง */
+     color: white;
+    }
+    
+    table {
+        width: 400px;
+        max-width: 200px;
+        border-collapse: collapse;
+        margin: 20px auto; /* จัดกึ่งกลาง */
+        font-size: 14px;
+    }
+
+    th, td {
+        padding: 8px 10px;
+        border: 1px solid #ddd;
+        font-size: 16px;
+    }
+
+    th {
+        color: rgb(28, 95, 157);
+        text-align: left; /* หัวข้ออยู่ชิดซ้าย */
+    }
+
+    p {
+        font-size: 16px;
+        font-weight: bold;
+        margin-top: 10px;
+        text-align: center;
+    }
   </style>
 </head>
 <body>
-  <div id="screen1">
+  <!-- <div id="screen1">
     <button onclick="play()">Play</button>
+  </div> -->
+  <div id="screen1">
+    <select id="timeSelect">
+      <option value="3">3 seconds</option>
+      <option value="5">5 seconds</option>
+      <option value="7">7 seconds</option>
+      <option value="10">10 seconds</option>
+    </select>
+    <br><br>
+    <button onclick="play()">Start</button>
   </div>
 
   <div id="screen2" class="hidden">
@@ -42,12 +160,11 @@
   </div>
 
   <div id="screen3" class="hidden">
-    <h1>Enter Your Answer</h1>
-    <input type="text" id="userAnswer" placeholder="Enter the total sum" />
-  </div>
+    <h4>Choose the Correct Answer</h1>
+    <div id="answerButtons"></div>
+</div>
 
   <div id="screen4" class="hidden">
-    <h1>Result</h1>
     <div id="summary"></div>
     <button onclick="play()">Play Again</button>
   </div>
@@ -55,6 +172,8 @@
   <script>
     let generatedNumbers = [];
     let totalSum = 0;
+    let playTime = 3;
+    let score = 0;
 
     function randomInt(min, max) {
       return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -78,16 +197,102 @@
       }
     }
 
-    function showNumbers() {
-      const numbersDiv = document.getElementById('numbers');
-      numbersDiv.innerHTML = generatedNumbers.join('<br>');
+    function generateAnswerOptions(correctAnswer) {
+        const options = new Set(); // ใช้ Set เพื่อป้องกันตัวเลขซ้ำกัน
+        options.add(correctAnswer); // ใส่คำตอบที่ถูกต้องก่อน
 
-      setTimeout(() => {
-        document.getElementById('screen2').classList.add('hidden');
-        document.getElementById('screen3').classList.remove('hidden');
-        document.getElementById('userAnswer').focus();
-      }, 3000);
+        while (options.size < 4) {
+        const randomOption = randomInt(correctAnswer - 4, correctAnswer + 4);
+        options.add(randomOption); // เพิ่มตัวเลือกที่สุ่ม
+        }
+
+        return Array.from(options).sort(() => Math.random() - 0.5); // สุ่มตำแหน่งตัวเลข
     }
+
+    function showAnswerOptions() {
+        const answerButtonsDiv = document.getElementById("answerButtons");
+        answerButtonsDiv.innerHTML = ""; // เคลียร์ปุ่มเก่า
+
+        const options = generateAnswerOptions(totalSum);
+
+        options.forEach((option) => {
+        const button = document.createElement("button");
+        button.textContent = option;
+        button.onclick = () => checkAnswer(option); // ตรวจคำตอบเมื่อคลิก
+        answerButtonsDiv.appendChild(button);
+        });
+    }
+
+    function checkAnswer(selectedAnswer) {
+
+        const summaryDiv = document.getElementById("summary");
+
+        const resultMessage = selectedAnswer === totalSum ? "Correct!" : "Wrong!";
+        const resultClass = selectedAnswer === totalSum ? "correct" : "wrong";
+
+        score = selectedAnswer === totalSum ? score +1 : score;
+
+        summaryDiv.innerHTML = `
+            <table>
+                <tbody>
+                    <tr>
+                        <th>#</th>
+                        <td>${generatedNumbers.join(", ")}</td>
+                    </tr>
+                    <tr>
+                        <th>Your</th>
+                        <td>${selectedAnswer}</td>
+                    </tr>
+                    <tr>
+                        <th>Answer</th>
+                        <td>${totalSum}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p>Score: ${score}</p>
+            <p class="${resultClass}">${resultMessage}</p>
+        `;
+
+     
+
+        document.getElementById("screen3").classList.add("hidden");
+        document.getElementById("screen4").classList.remove("hidden");
+    }
+
+    function showResultScore() {
+        const summaryTable = document.getElementById("summaryTable");
+        summaryTable.innerHTML = `
+            <tr>
+                <th>Question</th>
+                <th>Your Answer</th>
+                <th>Correct Answer</th>
+                <th>Status</th>
+            </tr>
+            ${gameHistory.map((entry, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${entry.yourAnswer}</td>
+                    <td>${entry.correctAnswer}</td>
+                    <td class="${entry.isCorrect ? 'correct' : 'wrong'}">
+                        ${entry.isCorrect ? 'Correct' : 'Wrong'}
+                    </td>
+                </tr>
+            `).join('')}
+        `;
+        
+    }
+
+    function showNumbers() {
+        const numbersDiv = document.getElementById('numbers');
+        numbersDiv.innerHTML = generatedNumbers.join('<br>');
+
+        setTimeout(() => {
+            document.getElementById('screen2').classList.add('hidden');
+            document.getElementById('screen3').classList.remove('hidden');
+            showAnswerOptions(); // เรียกใช้ showAnswerOptions เพื่อสร้างปุ่มคำตอบ
+        }, playTime * 1000);
+    }
+
 
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
@@ -104,6 +309,8 @@
     });
 
     function submitAnswer() {
+        showAnswerOptions();
+        
         const userAnswer = parseInt(document.getElementById('userAnswer').value, 10);
         const summaryDiv = document.getElementById('summary');
         
@@ -125,6 +332,9 @@
         }
 
     function play(){
+        const timeSelect = document.getElementById("timeSelect");
+        playTime = parseInt(timeSelect.value, 10); // เก็บเวลาที่ผู้ใช้เลือก
+
         document.getElementById('screen1').classList.add('hidden');
         document.getElementById('screen2').classList.remove('hidden');
         document.getElementById('screen3').classList.add('hidden');
