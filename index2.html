@@ -175,6 +175,7 @@
     let totalSum = 0;
     let playTime = 3;
     let score = 0;
+    let lastScore = 0;
 
     function randomInt(min, max) {
       return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -231,9 +232,11 @@
         const resultMessage = selectedAnswer === totalSum ? "Correct!" : "Wrong!";
         const resultClass = selectedAnswer === totalSum ? "correct" : "wrong";
 
-        const lastScore = score;
+        score = selectedAnswer === totalSum ? score + 1 : 0;
 
-        score = selectedAnswer === totalSum ? score +1 : 0;
+        if (score > 0) {
+            lastScore = score;
+        } 
 
         summaryDiv.innerHTML = `
             <table>
@@ -252,12 +255,14 @@
                     </tr>
                 </tbody>
             </table>
-            <p>You have got: ${lastScore}</p>
-            <p>Score: ${score}</p>
+            <p>You've got : ${lastScore}</p>
+            <p>Score      : ${score}</p>
             <p class="${resultClass}">${resultMessage}</p>
         `;
 
-     
+        if (score === 0) {
+            lastScore = 0;
+        } 
 
         document.getElementById("screen3").classList.add("hidden");
         document.getElementById("screen4").classList.remove("hidden");
