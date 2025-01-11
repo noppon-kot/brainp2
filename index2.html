@@ -231,6 +231,8 @@
         const resultMessage = selectedAnswer === totalSum ? "Correct!" : "Wrong!";
         const resultClass = selectedAnswer === totalSum ? "correct" : "wrong";
 
+        const lastScore = score;
+
         score = selectedAnswer === totalSum ? score +1 : 0;
 
         summaryDiv.innerHTML = `
@@ -250,6 +252,7 @@
                     </tr>
                 </tbody>
             </table>
+            <p>You have got: ${lastScore}</p>
             <p>Score: ${score}</p>
             <p class="${resultClass}">${resultMessage}</p>
         `;
