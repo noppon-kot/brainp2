@@ -202,7 +202,7 @@
       }
     }
 
-    function generateAnswerOptions(correctAnswer) {
+    /*function generateAnswerOptions(correctAnswer) {
         const options = new Set(); // ใช้ Set เพื่อป้องกันตัวเลขซ้ำกัน
         options.add(correctAnswer); // ใส่คำตอบที่ถูกต้องก่อน
 
@@ -212,22 +212,7 @@
         }
 
         return Array.from(options).sort(() => Math.random() - 0.5); // สุ่มตำแหน่งตัวเลข
-    }
-
-    /*function showAnswerOptions() {
-        const answerButtonsDiv = document.getElementById("answerButtons");
-        answerButtonsDiv.innerHTML = ""; // เคลียร์ปุ่มเก่า
-
-        const options = generateAnswerOptions(totalSum);
-
-        options.forEach((option) => {
-        const button = document.createElement("button");
-        button.textContent = option;
-        button.onclick = () => checkAnswer(option); // ตรวจคำตอบเมื่อคลิก
-        answerButtonsDiv.appendChild(button);
-        });
     }*/
-
     function generateOptions(correctAnswer) {
         const options = new Set();
         options.add(correctAnswer); // เพิ่มคำตอบที่ถูกต้องลงในตัวเลือก
@@ -254,6 +239,23 @@
         }
         return array;
     }
+
+    function showAnswerOptions() {
+        const answerButtonsDiv = document.getElementById("answerButtons");
+        answerButtonsDiv.innerHTML = ""; // เคลียร์ปุ่มเก่า
+
+        const options = generateAnswerOptions(totalSum);
+
+        options.forEach((option) => {
+          const button = document.createElement("button");
+          button.textContent = option;
+          button.onclick = () => checkAnswer(option); // ตรวจคำตอบเมื่อคลิก
+          answerButtonsDiv.appendChild(button);
+        });
+    }
+
+
+
 
     function checkAnswer(selectedAnswer) {
 
