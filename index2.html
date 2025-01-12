@@ -202,7 +202,7 @@
       }
     }
 
-    /*function generateAnswerOptions(correctAnswer) {
+    function generateAnswerOptions(correctAnswer) {
         const options = new Set(); // ใช้ Set เพื่อป้องกันตัวเลขซ้ำกัน
         options.add(correctAnswer); // ใส่คำตอบที่ถูกต้องก่อน
 
@@ -212,32 +212,6 @@
         }
 
         return Array.from(options).sort(() => Math.random() - 0.5); // สุ่มตำแหน่งตัวเลข
-    }*/
-    function generateOptions(correctAnswer) {
-        const options = new Set();
-        options.add(correctAnswer); // เพิ่มคำตอบที่ถูกต้องลงในตัวเลือก
-    
-        while (options.size < 4) {
-            const randomOption = randomInt(correctAnswer - 4, correctAnswer + 4);
-    
-            // ตรวจสอบว่าตัวเลขที่สุ่มมาไม่ซ้ำและไม่ใช่คำตอบที่ถูกต้องซ้ำ
-            if (!options.has(randomOption)) {
-                options.add(randomOption);
-            }
-        }
-    
-        // แปลง Set เป็น Array และสุ่มตำแหน่ง
-        const shuffledOptions = shuffleArray(Array.from(options));
-        return shuffledOptions;
-    }
-
-    // ฟังก์ชันสุ่มตำแหน่งในอาร์เรย์
-    function shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1)); // สุ่มตำแหน่ง
-            [array[i], array[j]] = [array[j], array[i]]; // สลับตำแหน่ง
-        }
-        return array;
     }
 
     function showAnswerOptions() {
