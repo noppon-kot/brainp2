@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mental Arithmetic</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      font-size: 16px;
+      color: #1f2933;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 480px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      padding: 20px 16px 24px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      margin: 0 0 8px;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: #6b7280;
+      margin-bottom: 16px;
+    }
+    #numbers {
+        color: #1d4ed8;
+        font-size: 24px;
+        font-weight: bold;
+        line-height: 1.5;
+        padding: 12px;
+        border-radius: 8px;
+        background: #eff6ff;
+        min-height: 80px;
+    }
+    .hidden {
+      display: none;
+    }
+    .result {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+    .correct {
+      color: green;
+      font-size: 24px; /* ขยายขนาดฟอนต์สำหรับข้อความ "Correct!" */
+    }
+    .wrong {
+      color: red;
+      font-size: 24px; /* ขยายขนาดฟอนต์สำหรับข้อความ "Wrong!" */
+    }
+    #summary p {
+      font-size: 20px; /* ขยายขนาดฟอนต์สำหรับข้อความใน summary */
+    }
+
+    #answerButtons {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 8px;
+    }
+
+    #answerButtons button {
+        font-size: 18px; /* ขนาดปุ่มคำตอบเล็กลง */
+        margin: 0;
+        padding: 10px 18px;
+        border-radius: 999px;
+    }
+    .result, #summary p {
+        font-size: 16px; /* ลดขนาดฟอนต์ของข้อความในผลลัพธ์ */
+    }
+    button {
+        font-size: 16px; /* ขนาดฟอนต์เริ่มต้นสำหรับปุ่มทั่วไป */
+        padding: 10px 20px;
+        margin: 8px;
+        border-radius: 999px;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.2s ease, transform 0.05s ease;
+    }
+    button[onclick="play()"],
+    button[onclick="play()"]:focus,
+    button[onclick="play()"]:hover {
+        font-size: 24px; /* ขนาดฟอนต์ใหญ่ขึ้นสำหรับปุ่ม Play */
+        padding: 15px 30px; /* เพิ่ม padding ให้ใหญ่ขึ้น */
+        background-color: #2563eb; /* สีพื้นหลัง */
+        color: white; /* สีตัวอักษร */
+        border-radius: 999px; /* มุมโค้ง */
+    }
+    button[onclick="play()"]:hover {
+        background-color: #1d4ed8; /* สีที่เปลี่ยนเมื่อ hover */
+    }
+
+    button[onclick="play()"]:active {
+        background-color: #1e40af; /* สีที่เปลี่ยนเมื่อกด */
+    }
+
+    button[onclick="playAgain()"] {
+        font-size: 24px; /* ขนาดฟอนต์ใหญ่ขึ้นสำหรับปุ่ม Play Again */
+        padding: 15px 30px;
+        background-color: #16a34a; /* สีพื้นหลัง */
+        color: white;
+        border-radius: 999px;
+    }
+
+    button[onclick="playAgain()"]:hover {
+        background-color: #15803d;
+    }
+
+    button[onclick="playAgain()"]:active {
+        background-color: #166534;
+    }
+
+    .answer-button {
+        font-size: 20px;
+        padding: 12px 22px;
+        margin: 6px;
+        border: none;
+        border-radius: 999px;
+        background-color: #f3f4f6;
+        color: #111827;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .answer-button:hover {
+     background-color: #328e17;
+    }
+
+    .answer-button.correct {
+     background-color: #4caf50; /* สีเขียว */
+     color: white;
+    }
+
+    .answer-button.wrong {
+     background-color: #f44336; /* สีแดง */
+     color: white;
+    }
+    
+    table {
+        width: 100%;
+        max-width: 380px;
+        border-collapse: collapse;
+        margin: 20px auto; /* จัดกึ่งกลาง */
+        font-size: 14px;
+        background: #f9fafb;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    th, td {
+        padding: 8px 10px;
+        border: 1px solid #e5e7eb;
+        font-size: 16px;
+    }
+
+    th {
+        color: rgb(28, 95, 157);
+        text-align: left; /* หัวข้ออยู่ชิดซ้าย */
+        background: #e0f2fe;
+    }
+
+    p {
+        font-size: 16px;
+        font-weight: bold;
+        margin-top: 10px;
+        text-align: center;
+    }
+
+    #timeSelect {
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+    }
+
+    #screen1 {
+      margin-bottom: 8px;
+    }
+
+    #screen3 h4 {
+      margin: 8px 0 4px;
+      font-size: 1rem;
+      color: #111827;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>Mental Arithmetic</h1>
+    <div class="subtitle">Choose the correct sum from the options</div>
+
+    <!-- <div id="screen1">
+      <button onclick="play()">Play</button>
+    </div> -->
+    <div id="screen1">
+      <select id="timeSelect">
+        <option value="1">1 seconds</option>
+        <option value="2">2 seconds</option>
+        <option value="2.5">2.5 seconds</option>
+        <option value="3">3 seconds</option>
+        <option value="5">4 seconds</option>
+        <option value="5">5 seconds</option>
+        <option value="7">7 seconds</option>
+        <option value="10">10 seconds</option>
+      </select>
+      <br>
+      <button onclick="play()">Start</button>
+    </div>
+
+    <div id="screen2" class="hidden">
+      <div id="numbers"></div>
+    </div>
+
+    <div id="screen3" class="hidden">
+      <h4>Choose the Correct Answer</h4>
+      <div id="answerButtons"></div>
+    </div>
+
+    <div id="screen4" class="hidden">
+      <div id="summary"></div>
+      <button onclick="play()">Play Again</button>
+    </div>
+  </div>
+
+  <script>
+    let generatedNumbers = [];
+    let totalSum = 0;
+    let playTime = 3;
+    let score = 0;
+    let lastScore = 0;
+
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function generateNumbers() {
+      generatedNumbers = [];
+      totalSum = 0;
+
+      // Generate a 2-digit positive number for the first number (10-30 like index.html)
+      let firstNumber = randomInt(10, 30);
+      generatedNumbers.push(firstNumber);
+      totalSum += firstNumber;
+
+      for (let i = 1; i < 8; i++) {
+        let num = randomInt(-9, 9);
+        if (totalSum + num < 0) {
+          while (totalSum + num < 0) {
+            num = randomInt(-9, 9);
+          }
+        }
+        generatedNumbers.push(num);
+        totalSum += num;
+      }
+    }
+
+    function generateAnswerOptions(correctAnswer) {
+        const options = new Set(); // ใช้ Set เพื่อป้องกันตัวเลขซ้ำกัน
+        options.add(correctAnswer); // ใส่คำตอบที่ถูกต้องก่อน
+
+        while (options.size < 4) {
+        const randomOption = randomInt(correctAnswer - 4, correctAnswer + 4);
+        options.add(randomOption); // เพิ่มตัวเลือกที่สุ่ม
+        }
+
+        return Array.from(options).sort(() => Math.random() - 0.5); // สุ่มตำแหน่งตัวเลข
+    }
+
+    function showAnswerOptions() {
+        const answerButtonsDiv = document.getElementById("answerButtons");
+        answerButtonsDiv.innerHTML = ""; // เคลียร์ปุ่มเก่า
+
+        const options = generateAnswerOptions(totalSum);
+
+        options.forEach((option) => {
+          const button = document.createElement("button");
+          button.textContent = option;
+          button.onclick = () => checkAnswer(option); // ตรวจคำตอบเมื่อคลิก
+          answerButtonsDiv.appendChild(button);
+        });
+    }
+
+
+
+
+    function checkAnswer(selectedAnswer) {
+
+        const summaryDiv = document.getElementById("summary");
+
+        const resultMessage = selectedAnswer === totalSum ? "Correct!" : "Wrong!";
+        const resultClass = selectedAnswer === totalSum ? "correct" : "wrong";
+
+        score = selectedAnswer === totalSum ? score + 1 : 0;
+
+        if (score > 0) {
+            lastScore = score;
+        } 
+
+        summaryDiv.innerHTML = `
+            <table>
+                <tbody>
+                    <tr>
+                        <th>#</th>
+                        <td>${generatedNumbers.join(", ")}</td>
+                    </tr>
+                    <tr>
+                        <th>Your</th>
+                        <td>${selectedAnswer}</td>
+                    </tr>
+                    <tr>
+                        <th>Answer</th>
+                        <td>${totalSum}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p>You've got : ${lastScore}</p>
+            <p>Score      : ${score}</p>
+            <p class="${resultClass}">${resultMessage}</p>
+        `;
+
+        if (score === 0) {
+            lastScore = 0;
+        } 
+
+        document.getElementById("screen3").classList.add("hidden");
+        document.getElementById("screen4").classList.remove("hidden");
+    }
+
+    function showResultScore() {
+        const summaryTable = document.getElementById("summaryTable");
+        summaryTable.innerHTML = `
+            <tr>
+                <th>Question</th>
+                <th>Your Answer</th>
+                <th>Correct Answer</th>
+                <th>Status</th>
+            </tr>
+            ${gameHistory.map((entry, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${entry.yourAnswer}</td>
+                    <td>${entry.correctAnswer}</td>
+                    <td class="${entry.isCorrect ? 'correct' : 'wrong'}">
+                        ${entry.isCorrect ? 'Correct' : 'Wrong'}
+                    </td>
+                </tr>
+            `).join('')}
+        `;
+        
+    }
+
+    function showNumbers() {
+        const numbersDiv = document.getElementById('numbers');
+        numbersDiv.innerHTML = generatedNumbers.join('<br>');
+
+        setTimeout(() => {
+            document.getElementById('screen2').classList.add('hidden');
+            document.getElementById('screen3').classList.remove('hidden');
+            showAnswerOptions(); // เรียกใช้ showAnswerOptions เพื่อสร้างปุ่มคำตอบ
+        }, playTime * 1000);
+    }
+
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            if (!document.getElementById('screen1').classList.contains('hidden')) {
+                document.getElementById('screen1').classList.add('hidden');
+                document.getElementById('screen2').classList.remove('hidden');
+                generateNumbers();
+                showNumbers();
+            } else if (!document.getElementById('screen3').classList.contains('hidden')) {
+                event.preventDefault(); // หยุดการทำงานเริ่มต้น
+                submitAnswer();
+            }
+        }
+    });
+
+    function submitAnswer() {
+        showAnswerOptions();
+        
+        const userAnswer = parseInt(document.getElementById('userAnswer').value, 10);
+        const summaryDiv = document.getElementById('summary');
+        
+        const resultMessage = userAnswer === totalSum ? 'Correct!' : 'Wrong!';
+        const resultClass = userAnswer === totalSum ? 'correct' : 'wrong';
+
+        summaryDiv.innerHTML = `
+            <p>Numbers: ${generatedNumbers.join(', ')}</p>
+            <p>Correct Sum: ${totalSum}</p>
+            <p>Your Answer: ${userAnswer}</p>
+            <p class="${resultClass}">${resultMessage}</p>
+        `;
+
+        // เคลียร์ช่องคำตอบหลังจากตอบเสร็จ
+        document.getElementById('userAnswer').value = '';
+
+        document.getElementById('screen3').classList.add('hidden');
+        document.getElementById('screen4').classList.remove('hidden');
+        }
+
+    function play(){
+        const timeSelect = document.getElementById("timeSelect");
+        playTime = parseInt(timeSelect.value, 10); // เก็บเวลาที่ผู้ใช้เลือก
+
+        document.getElementById('screen1').classList.add('hidden');
+        document.getElementById('screen2').classList.remove('hidden');
+        document.getElementById('screen3').classList.add('hidden');
+        document.getElementById('screen4').classList.add('hidden');
+        generateNumbers();
+        showNumbers();
+    }
+
+    function restartGame() {
+      document.getElementById('screen4').classList.add('hidden');
+      document.getElementById('screen1').classList.remove('hidden');
+        // document.getElementById('screen1').classList.add('hidden');
+        // document.getElementById('screen2').classList.remove('hidden');
+        // generateNumbers();
+        // showNumbers();
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        if (document.getElementById('screen1').classList.contains('hidden')) {
+          return;
+        }
+
+        document.getElementById('screen1').classList.add('hidden');
+        document.getElementById('screen2').classList.remove('hidden');
+        generateNumbers();
+        showNumbers();
+      }
+    });
+  </script>
+</body>
+</html>
